@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiber Optic CC</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            padding-bottom: 80px;
+        }
+
+        header {
+            background-color: #1f1f1f;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: normal;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        select {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: #2b2b2b;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #0055ff;
+        }
+
+        .pipe-item {
+            border-bottom: 1px solid #222222;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            background-color: #444444;
+            height: 44px;
+            padding-right: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .row:active {
+            background-color: #555555;
+        }
+
+        .color-box {
+            width: 45px;
+            height: 100%;
+            margin-right: 12px;
+            flex-shrink: 0;
+            position: relative;
+            border-right: 1px solid #222222;
+        }
+
+        /* Svart rand på vanliga färger */
+        .stripe-black::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 38%;
+            width: 24%;
+            height: 100%;
+            background-color: #000000;
+        }
+
+        /* Vit rand på svarta tuber/fibrer så att randen faktiskt syns! */
+        .stripe-white::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 38%;
+            width: 24%;
+            height: 100%;
+            background-color: #ffffff;
+        }
+
+        .text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #e0e0e0;
+            flex-grow: 1;
+        }
+
+        .arrow {
+            font-size: 12px;
+            color: #aaa;
+            margin-left: 8px;
+        }
+
+        .fiber-sublist {
+            display: none;
+            background-color: #222222;
+            padding: 4px 0 4px 20px;
+            border-top: 1px solid #333;
+        }
+
+        .fiber-sublist.open {
+            display: block;
+        }
+
+        .fiber-row {
+            display: flex;
+            align-items: center;
+            height: 32px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .fiber-row.highlight {
+            background-color: #3b3112;
+        }
+
+        .fiber-color-box {
+            width: 30px;
+            height: 20px;
+            margin-right: 12px;
+            border-radius: 2px;
+            position: relative;
+            border: 1px solid #555555;
+        }
+
+        .fiber-text {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #d86b27;
+            color: black;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <span>Fiber Optic CC</span>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="stdSelect">Standard:</label>
+                    <select id="stdSelect" onchange="saveAndRender()">
+                        <option value="S12">S12</option>
+                        <option value="Ericsson">Ericsson / Typ E</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="fiberSelect">Fibrer/rör:</label>
+                    <select id="fiberSelect" onchange="saveAndRender()">
+                        <option value="4">4f</option>
+                        <option value="8">8f</option>
+                        <option value="12">12f</option>
+                        <option value="24">24f</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Sök fiber (ex. 150) eller spann (ex. 100-200)..." oninput="renderList()">
+        </div>
+    </header>
+
+    <div id="list"></div>
+    <div class="fab" id="fabCount">24</div>
+
+    <script>
+        const s12Colors = [
+            { name: "Röd", hex: "#cc0000" },
+            { name: "Blå", hex: "#0055ff" },
+            { name: "Vit", hex: "#ffffff" },
+            { name: "Grön", hex: "#00aa00" },
+            { name: "Gul", hex: "#eeee00" },
+            { name: "Grå", hex: "#888888" },
+            { name: "Brun", hex: "#8b4513" },
+            { name: "Svart", hex: "#000000" },
+            { name: "Lila", hex: "#800080" },
+            { name: "Orange", hex: "#ff7700" },
+            { name: "Turkos", hex: "#00cccc" },
+            { name: "Rosa", hex: "#ff69b4" }
+        ];
+
+        const ericssonColors = [
+            { name: "Röd", hex: "#cc0000" },
+            { name: "Blå", hex: "#0055ff" },
+            { name: "Vit", hex: "#ffffff" },
+            { name: "Grön", hex: "#00aa00" },
+            { name: "Gul", hex: "#eeee00" },
+            { name: "Grå", hex: "#888888" },
+            { name: "Brun", hex: "#8b4513" },
+            { name: "Svart", hex: "#000000" },
+            { name: "Orange", hex: "#ff7700" },
+            { name: "Lila", hex: "#800080" },
+            { name: "Rosa", hex: "#ff69b4" },
+            { name: "Turkos", hex: "#00cccc" }
+        ];
+
+        const totalPipes = 40;
+
+        function loadSettings() {
+            const savedStd = localStorage.getItem("fiber_std");
+            const savedFibers = localStorage.getItem("fiber_count");
+
+            if (savedStd) {
+                document.getElementById("stdSelect").value = savedStd;
+            } else {
+                document.getElementById("stdSelect").value = "S12";
+            }
+
+            if (savedFibers) {
+                document.getElementById("fiberSelect").value = savedFibers;
+            } else {
+                document.getElementById("fiberSelect").value = "24";
+            }
+        }
+
+        function saveAndRender() {
+            const selectedStandard = document.getElementById("stdSelect").value;
+            const fibersPerPipe = document.getElementById("fiberSelect").value;
+
+            localStorage.setItem("fiber_std", selectedStandard);
+            localStorage.setItem("fiber_count", fibersPerPipe);
+
+            renderList();
+        }
+
+        function toggleSublist(id) {
+            const sublist = document.getElementById(`sublist-${id}`);
+            const arrow = document.getElementById(`arrow-${id}`);
+            if (sublist.classList.contains("open")) {
+                sublist.classList.remove("open");
+                arrow.textContent = "▼";
+            } else {
+                sublist.classList.add("open");
+                arrow.textContent = "▲";
+            }
+        }
+
+        function getStripeClass(baseColorHex, isStriped) {
+            if (!isStriped) return "";
+            // Om grundfärgen är svart (#000000), använd vit rand istället
+            return baseColorHex === "#000000" ? " stripe-white" : " stripe-black";
+        }
+
+        function renderList() {
+            const selectedStandard = document.getElementById("stdSelect").value;
+            const baseColors = selectedStandard === "S12" ? s12Colors : ericssonColors;
+
+            const fibersPerPipe = parseInt(document.getElementById("fiberSelect").value);
+            const searchValue = document.getElementById("searchInput").value.trim();
+            const listContainer = document.getElementById("list");
+            
+            document.getElementById("fabCount").textContent = fibersPerPipe;
+            listContainer.innerHTML = "";
+
+            let searchStart = null;
+            let searchEnd = null;
+
+            if (searchValue.includes("-")) {
+                const parts = searchValue.split("-");
+                searchStart = parseInt(parts[0]);
+                searchEnd = parseInt(parts[1]);
+            } else if (searchValue !== "" && !isNaN(searchValue)) {
+                searchStart = parseInt(searchValue);
+                searchEnd = parseInt(searchValue);
+            }
+
+            let matchesCount = 0;
+
+            for (let i = 1; i <= totalPipes; i++) {
+                const colorIndex = (i - 1) % 12;
+                const isStriped = i > 12;
+                const baseColor = baseColors[colorIndex];
+
+                const pipeStartFiber = (i - 1) * fibersPerPipe + 1;
+                const pipeEndFiber = i * fibersPerPipe;
+
+                let isPipeMatch = true;
+                if (searchStart !== null && searchEnd !== null) {
+                    if (pipeEndFiber < searchStart || pipeStartFiber > searchEnd) {
+                        isPipeMatch = false;
+                    }
+                }
+
+                if (!isPipeMatch) continue;
+
+                matchesCount++;
+
+                const pipeContainer = document.createElement("div");
+                pipeContainer.className = "pipe-item";
+
+                const row = document.createElement("div");
+                row.className = "row";
+                row.onclick = () => toggleSublist(i);
+
+                const stripeClass = getStripeClass(baseColor.hex, isStriped);
+                const colorBox = document.createElement("div");
+                colorBox.className = "color-box" + stripeClass;
+                colorBox.style.backgroundColor = baseColor.hex;
+
+                const text = document.createElement("div");
+                text.className = "text";
+                text.textContent = `${i}) Rör=${i} (${pipeStartFiber}-${pipeEndFiber})`;
+
+                const arrow = document.createElement("span");
+                arrow.className = "arrow";
+                arrow.id = `arrow-${i}`;
+                arrow.textContent = searchStart !== null ? "▲" : "▼";
+
+                row.appendChild(colorBox);
+                row.appendChild(text);
+                row.appendChild(arrow);
+
+                const sublist = document.createElement("div");
+                sublist.className = "fiber-sublist" + (searchStart !== null ? " open" : "");
+                sublist.id = `sublist-${i}`;
+
+                for (let f = 1; f <= fibersPerPipe; f++) {
+                    const globalFiberNum = pipeStartFiber + (f - 1);
+
+                    if (searchStart !== null && searchEnd !== null) {
+                        if (globalFiberNum < searchStart || globalFiberNum > searchEnd) {
+                            continue;
+                        }
+                    }
+
+                    const fiberColorIndex = (f - 1) % 12;
+                    const fiberIsStriped = f > 12;
+                    const fColor = baseColors[fiberColorIndex];
+                    const fStripeClass = getStripeClass(fColor.hex, fiberIsStriped);
+
+                    const fRow = document.createElement("div");
+                    fRow.className = "fiber-row" + (searchStart !== null ? " highlight" : "");
+
+                    const fColorBox = document.createElement("div");
+                    fColorBox.className = "fiber-color-box" + fStripeClass;
+                    fColorBox.style.backgroundColor = fColor.hex;
+
+                    const fText = document.createElement("div");
+                    fText.className = "fiber-text";
+                    fText.textContent = `Fiber ${f} (${globalFiberNum}) - ${fColor.name}${fiberIsStriped ? ' (m. rand)' : ''}`;
+
+                    fRow.appendChild(fColorBox);
+                    fRow.appendChild(fText);
+                    sublist.appendChild(fRow);
+                }
+
+                pipeContainer.appendChild(row);
+                pipeContainer.appendChild(sublist);
+                listContainer.appendChild(pipeContainer);
+            }
+
+            if (matchesCount === 0 && searchValue !== "") {
+                listContainer.innerHTML = '<div class="no-results">Inga rör eller fibrer hittades för din sökning.</div>';
+            }
+        }
+
+        loadSettings();
+        renderList();
+    </script>
+</body>
+</html>
